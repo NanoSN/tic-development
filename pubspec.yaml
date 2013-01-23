@@ -1,0 +1,9 @@
+name:  tic_development
+description:  development framework for tic
+version: 0.0.1
+
+dependencies:
+  web_ui:
+    path: /Users/sam/Development/Projects/third_party/web-ui
+  mimetypes:
+    path: /Users/sam/Development/Projects/mimetypes
