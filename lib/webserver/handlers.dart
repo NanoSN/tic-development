@@ -2,7 +2,6 @@ library handlers;
 
 import 'dart:async';
 import 'dart:io';
-import 'dart:isolate';
 import '../util.dart';
 import 'package:web_ui/component_build.dart' as web_ui;
 import 'package:mimetypes/mimetypes.dart';
@@ -13,8 +12,8 @@ class ClientFileHandler {
   ClientFileHandler(this.path);
 
   void onRequest(HttpRequest req, HttpResponse res) {
-    print('${req.method} ${req.path}');
-    var path = '${this.path}${req.path}';
+    print('${req.method} ${req.uri.path}');
+    var path = '${this.path}${req.uri.path}';
     new ClientFileServer(req, res)._handleSendFile(path);
   }
 }
@@ -41,7 +40,7 @@ class ClientFileServer {
     if(info.lastModified == request.headers.ifModifiedSince){
       res.statusCode = HttpStatus.NOT_MODIFIED;
       res.contentLength = 0;
-      res.outputStream.close();
+      res.close();
       return;
     }
 
@@ -51,17 +50,17 @@ class ClientFileServer {
 
     if(request.method == 'HEAD'){
       res.contentLength = 0;
-      response.outputStream.close();
+      response.close();
       return;
     }
-    info.file.openInputStream().pipe(this.response.outputStream);
+    info.file.openRead().pipe(response);
   }
 
   bool _404(Exception ex){
     print(ex);
     this.response.statusCode = HttpStatus.NOT_FOUND;
-    this.response.outputStream.writeString(ex.toString());
-    this.response.outputStream.close();
+    this.response.write(ex.toString());
+    this.response.close();
     return true;
   }
 }
@@ -150,7 +149,7 @@ ${this.length}
 
 
 class CommandDispatcherHandler {
-  var _wsHandler = new WebSocketHandler();
+  var _wsHandler;// = new WebSocketHandler();
   String path;
   String file;
 
@@ -210,10 +209,10 @@ class WebUiHandler {
 
   Future<String> _build(String file) {
     var completer = new Completer();
-    new Timer(0, (_) {
+    Timer.run(() {
       print('buiding $file ... ');
-      var futures = web_ui.build(new Options().arguments, [file]);
-      Future.wait(futures).then((r){
+      var future = web_ui.build(new Options().arguments, [file]);
+      Future.wait([future]).then((r){
         print('done!');
         print(r[0].outputs.values);
         var index = r[0].outputs.values.firstMatching((f) => f==file);
@@ -233,11 +232,11 @@ class WebUiHandler {
   _redirectToBuiltFile(String outFile, HttpResponse res){
     res.headers.add(HttpHeaders.LOCATION, outFile.replaceAll(path, ''));
     res.statusCode = HttpStatus.MOVED_PERMANENTLY;
-    res.outputStream.close();
+    res.close();
   }
   
   void onRequest(HttpRequest req, HttpResponse res) {
-    print('${req.method} ${req.path}');
+    print('${req.method} ${req.uri.path}');
     print(req.headers[HttpHeaders.USER_AGENT]);
     _findMainFile().then(_build).then((r) => _redirectToBuiltFile(r, res));
   }
