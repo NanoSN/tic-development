@@ -3,6 +3,11 @@ description:  development framework for tic
 version: 0.0.1
 
 dependencies:
-  web_ui: any
+  pathos: 0.6.3+1
+  web_ui:
+      git: https://github.com/dart-lang/web-ui.git
   mimetypes:
     path: /Users/sam/Development/Projects/mimetypes
+    
+dev_dependencies:
+  unittest: any

@@ -2,7 +2,7 @@ library handlers;
 
 import 'dart:async';
 import 'dart:io';
-import '../util.dart';
+import '../util.dart' as util;
 import 'package:web_ui/component_build.dart' as web_ui;
 import 'package:mimetypes/mimetypes.dart';
 
@@ -45,7 +45,7 @@ class ClientFileServer {
     }
 
     res.contentLength = info.length;
-    headers.contentType = new ContentType.fromString(info.mimetype);
+    headers.contentType = ContentType.parse(info.mimetype);
     headers.set(HttpHeaders.LAST_MODIFIED, info.lastModified);
 
     if(request.method == 'HEAD'){
@@ -74,7 +74,7 @@ class ClientFileInfo {
 
   static Future<ClientFileInfo> getInfo(String path, [String mimetype]){
     var info = new ClientFileInfo();
-    if(?mimetype) info.mimetype = mimetype;
+    if(mimetype != null) info.mimetype = mimetype;
     info.path = path;
 
     var exists = info._exists(info);
@@ -129,13 +129,13 @@ class ClientFileInfo {
   
   Future<ClientFileInfo> _getMimeType(ClientFileInfo info){
     if(info.mimetype != null)
-      return new Future.immediate(info);
+      return new Future.value(info);
     
     var mimetype = guessType(info.path);
     if(mimetype == null)
       mimetype = 'application/octet-stream';
     info.mimetype = mimetype;
-    return new Future.immediate(info);
+    return new Future.value(info);
   }
 
   String toString() => """
@@ -214,11 +214,8 @@ class WebUiHandler {
       var future = web_ui.build(new Options().arguments, [file]);
       Future.wait([future]).then((r){
         print('done!');
-        print(r[0].outputs.values);
-        var index = r[0].outputs.values.firstMatching((f) => f==file);
-        print(r[0].outputs.keys);
-        print(r[0].outputs.values);
-        for(String key in r[0].outputs.keys){
+        var index = r.first.first.outputs.values.firstWhere((f) => f==file);
+        for(String key in r.first.first.outputs.keys){
           if(key.endsWith(mainfile)){
             completer.complete(key);
             break;
