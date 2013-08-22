@@ -157,7 +157,7 @@ class CommandDispatcherHandler {
     _wsHandler.onOpen = this.onOpen;
 
     //TODO: do we need ready flag before accepting requests?
-    var handlersFile = findFile(this.path, 'command_handlers.dart',
+    var handlersFile = util.findFileFirstMatch(this.path, 'command_handlers.dart',
         ignoreDirs:['packages', 'out']);
     
     handlersFile.then((file) {
@@ -204,7 +204,7 @@ class WebUiHandler {
   WebUiHandler(this.path);
 
   Future<String> _findMainFile(){
-    return findFile(this.path, this.mainfile, ignoreDirs:['packages', 'out']);
+    return util.findFileFirstMatch(this.path, this.mainfile, ignoreDirs:['packages', 'out']);
   }
 
   Future<String> _build(String file) {

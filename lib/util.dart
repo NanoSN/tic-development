@@ -1,30 +1,24 @@
 library util;
 import 'dart:async';
 import 'dart:io';
+import 'package:pathos/path.dart' as pathos;
 
-Future<String> findFile(String path, String filename, {List<String> ignoreDirs}){
+Future<String> findFileFirstMatch(String path, String filename,
+    {List<String> ignoreDirs}){
+  
   var completer = new Completer();
   var found = null;
   Directory dir = new Directory(path);
-  List<FileSystemEntity> lister = dir.listSync();
-  for(final file in lister){
-    var p = new Path(file.path);
-    if(file is Directory
-        && file.path.startsWith(path)
-        && ignoreDirs != null
-        && ignoreDirs.contains(p.filename)){
-      findFile(file.path, filename)
-        .catchError((e)=>print(e))
-        .then((f){
-        try{
-          completer.complete(f);
-        } on StateError {}
-      });
-    } else {
-      print(file.path);
-      if(file.path.endsWith(filename)){
-        completer.complete(file.path);
-      }
+  List<FileSystemEntity> lister = dir.listSync(recursive: true,
+      followLinks: false);
+  
+  for(int i=0; i<lister.length; i++){
+    final file = lister[i];
+    if(pathos.basename(file.path) == filename && file is !Directory){
+      completer.complete(file.path);
+      break;
+    } else if(i == lister.length -1){
+      completer.complete(null);
     }
   }
   return completer.future;
