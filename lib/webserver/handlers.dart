@@ -204,7 +204,8 @@ class WebUiHandler {
   WebUiHandler(this.path);
 
   Future<String> _findMainFile(){
-    return util.findFileFirstMatch(this.path, this.mainfile, ignoreDirs:['packages', 'out']);
+    return util.findFileFirstMatch(this.path, this.mainfile,
+        ignoreDirs:['packages', 'out']);
   }
 
   Future<String> _build(String file) {
