@@ -1,10 +1,4 @@
-library handlers;
-
-import 'dart:async';
-import 'dart:io';
-import '../util.dart' as util;
-import 'package:web_ui/component_build.dart' as web_ui;
-import 'package:mimetypes/mimetypes.dart';
+part of tic_development;
 
 class ClientFileHandler {
   String path;
@@ -24,13 +18,13 @@ class ClientFileServer {
   String path;
 
   ClientFileServer(this.request, this.response);
- 
+
   void _handleSendFile(String path, [String mimetype]){
     var result = ClientFileInfo.getInfo(path, mimetype);
     result
       .then(this._sendFile)
       .catchError((ex) => this._404(ex));
-    
+
   }
 
   void _sendFile(ClientFileInfo info){
@@ -107,9 +101,9 @@ class ClientFileInfo {
 
     file.lastModified().then((Date date){
       info.lastModified = date;
-      completer.complete(info);      
+      completer.complete(info);
     });
-    
+
     return completer.future;
   }
 
@@ -123,14 +117,14 @@ class ClientFileInfo {
       info.length = length;
       completer.complete(info);
     });
-    
+
     return completer.future;
   }
-  
+
   Future<ClientFileInfo> _getMimeType(ClientFileInfo info){
     if(info.mimetype != null)
       return new Future.value(info);
-    
+
     var mimetype = guessType(info.path);
     if(mimetype == null)
       mimetype = 'application/octet-stream';
@@ -159,13 +153,13 @@ class CommandDispatcherHandler {
     //TODO: do we need ready flag before accepting requests?
     var handlersFile = util.findFileFirstMatch(this.path, 'command_handlers.dart',
         ignoreDirs:['packages', 'out']);
-    
+
     handlersFile.then((file) {
       this.file = file;
       print('Ready to serve requests');
     });
   }
-  
+
   void onRequest(HttpRequest req, HttpResponse res) =>
     _wsHandler.onRequest(req, res);
 
@@ -182,7 +176,7 @@ class CommandDispatcher {
   CommandDispatcher(this.file, this.connection){
     connection.onMessage = this.onMessage;
     connection.onClosed = this.onClosed;
-    this.port = spawnUri(this.file);      
+    this.port = spawnUri(this.file);
   }
 
   void onMessage(message) {
@@ -232,7 +226,7 @@ class WebUiHandler {
     res.statusCode = HttpStatus.MOVED_PERMANENTLY;
     res.close();
   }
-  
+
   void onRequest(HttpRequest req, HttpResponse res) {
     print('${req.method} ${req.uri.path}');
     print(req.headers[HttpHeaders.USER_AGENT]);
